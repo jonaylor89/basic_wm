@@ -25,6 +25,55 @@ WindowManager::~WindowManager() {
     XCloseDisplay(display_);
 }
 
-void WindowManager::Run() { /* TODO */ }
+void WindowManager::Run() {
+    //Initialization
 
+    wm_detected_ = false;
+    XSetErrorHandler(&WindowManager::OnWMDetected);
+    XSelectInput(
+            display_,
+            root_,
+            SubtructureRedirectMask | SubstructureNotifyMask);
+    XSync(display_, false);
+
+    if (wm_detected_) {
+        LOG(ERROR)  << "Detected another window manager on display "
+                    << XDisplayString(display_);
+        return;
+    }
+
+    XSetErrorHandler(&WindowManager::OnXError);
+
+    //Event Loop
+    
+    for (;;) {
+        XEvent e;
+        XNextEvent(display_, &e);
+        LOG(INFO) << "Recieved event: " << ToString(e);
+
+        switch(e.type) {
+            case CreateNotify:
+                OnCreateNotify(e.xcreatewindow);
+                break;
+            case DestroyNotify:
+                OnDestroyNotify(e.destroywindow);
+                break;
+            case ReparentNotify:
+                OnReparentNotify(e.xreparent);
+                break;
+            default:
+                LOG(WARNING) << "Ignored event";
+        }
+    }
+}
+
+int WindowManager::OnWMDetected(DIsplay* display, XErrorEvent* e) {
+    CHECK_EQ(static_cast<int>(e->error_code), BadAccess);
+
+    wm_deteced_ = true;
+
+    return 0;
+}
+
+int WindowManager::OnXError(Display* display, XErrorEvent* e) { /* print e */}
 
