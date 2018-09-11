@@ -33,7 +33,7 @@ void WindowManager::Run() {
     XSelectInput(
             display_,
             root_,
-            SubtructureRedirectMask | SubstructureNotifyMask);
+            SubstructureRedirectMask | SubstructureNotifyMask);
     XSync(display_, false);
 
     if (wm_detected_) {
@@ -89,7 +89,7 @@ void WindowManager::Frame(Window w) {
 
     // TODO - see Framing Existing Top-Level Windows
     
-    const Window Frame = XCreateSimpleWindow(
+    const Window frame = XCreateSimpleWindow(
             display_,
             root_,
             x_window_attrs.x,
@@ -103,7 +103,7 @@ void WindowManager::Frame(Window w) {
     XSelectInput(
             display_,
             frame,
-            SubtructureRedirectMask | SubstructureNotifyMask);
+            SubstructureRedirectMask | SubstructureNotifyMask);
             
     XAddToSaveSet(display_, w);
 
@@ -117,19 +117,19 @@ void WindowManager::Frame(Window w) {
 
     clients[w] = frame;
 
-    XGrabButton(...);
+    // XGrabButton(...);
 
-    XGrabButton(...);
+    // XGrabButton(...);
 
-    XGrabKey(...);
+    // XGrabKey(...);
 
-    XGrabKey(...);
+    // XGrabKey(...);
 
-    LOG(INFO) << "Framed window " << w <<< " [" << frame << "]";
+    LOG(INFO) << "Framed window " << w << " [" << frame << "]";
 }
 
 void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e) {
-    XWinfowChanges changes;
+    XWindowChanges changes;
 
     changes.x = e.x;
     changes.y = e.y;
