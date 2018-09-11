@@ -61,11 +61,89 @@ void WindowManager::Run() {
             case ReparentNotify:
                 OnReparentNotify(e.xreparent);
                 break;
+            case ConfigureRequest:
+                OnConfigureRequest(e.confiurerequest);
+                break;
+            case MapRequest:
+                OnMapRequest(e.xmaprequest);
+                break;
             default:
                 LOG(WARNING) << "Ignored event";
         }
     }
 }
+
+void WindowManager::OnMapRequest(const XMapRequestEvent& e) {
+    Frame(e.window);
+
+    XMapWindow(display_, e.window);
+}
+
+void WindowManager::Frame(Window w) {
+    const unsigned int BORDER_WIDTH = 3;
+    const unsigned long BORDER_COLOR = 0xff0000;
+    const unsigned long BG_COLOR = 0x0000ff;
+
+    XWindowAttributes x_window_attrs;
+    CHECK(XGetWindowAttributes(display_, w, &x_window_attrs));
+
+    // TODO - see Framing Existing Top-Level Windows
+    
+    const Window Frame = XCreateSimpleWindow(
+            display_,
+            root_,
+            x_window_attrs.x,
+            x_window_attrs.y,
+            x_window_attrs.width,
+            x_window_attrs.height,
+            BORDER_WIDTH,
+            BORDER_COLOR,
+            BG_COLOR);
+
+    XSelectInput(
+            display_,
+            frame,
+            SubtructureRedirectMask | SubstructureNotifyMask);
+            
+    XAddToSaveSet(display_, w);
+
+    XReparentWindow(
+            display_,
+            w,
+            frame,
+            0, 0);
+
+    XMapWindow(display_, frame);
+
+    clients[w] = frame;
+
+    XGrabButton(...);
+
+    XGrabButton(...);
+
+    XGrabKey(...);
+
+    XGrabKey(...);
+
+    LOG(INFO) << "Framed window " << w <<< " [" << frame << "]";
+}
+
+void WindowManager::OnConfigureRequest(const XConfigureRequestEvent& e) {
+    XWinfowChanges changes;
+
+    changes.x = e.x;
+    changes.y = e.y;
+    changes.width = e.width;
+    changes.height = e.height;
+    changes.border_mode = e.border_width;
+    changes.sibling = e.above;
+    changes.stack_mode = e.detail;
+
+    XConfigureWindow(display_, e.window, e.value_mask, &changes);
+    LOG(INFO) << "Resize " << e.window << " to " << Size<int>(e.width, e.height);
+}
+
+void WindowManager::OnCreateNotify(const XCreateWindowEvent& e) {}
 
 int WindowManager::OnWMDetected(DIsplay* display, XErrorEvent* e) {
     CHECK_EQ(static_cast<int>(e->error_code), BadAccess);
